@@ -104,3 +104,16 @@ legend({'Specimen 1','Specimen 2','Specimen 3','Specimen 4','Specimen 5',},'Loca
 grid on
 print('SS_E_017','-dpng');
 print('SS_E_017','-dsvg');
+
+figure % plot force vs mid-span deflection for all specimens
+plot(experimental_new(1:size(experimental_new,1)-10,1),experimental_new(1:1:size(experimental_new,1)-10,2)); 
+hold on
+for i=2:size(R,1)
+    plot(experimental_new(1:size(experimental_new,1)-10,i*2-1),experimental_new(1:1:size(experimental_new,1)-10,i*2)); 
+end	
+xlabel('Mid-Span Deflection [mm]')
+ylabel('Force [N]')
+legend({'Specimen 1','Specimen 2','Specimen 3','Specimen 4','Specimen 5',},'Location','southeast')
+grid on
+print('FD_TB_029','-dpng');
+print('FD_TB_029','-dsvg');
