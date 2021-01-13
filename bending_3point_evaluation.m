@@ -27,6 +27,18 @@ dimensions=xlsread('Ukoly a testovani.xlsx','Ohyb','D40:E44');
 % Import supports span 
 span=xlsread('Ukoly a testovani.xlsx','Ohyb','H4');
 
+
+% Import data for comparison plot> experimental/numerical
+addpath('C:\Users\David Krzikalla\OneDrive - VSB-TUO\Testovani_materialu_Markforged\FEA\Flexural_test\shell_solid1');
+addpath('C:\Users\David Krzikalla\OneDrive - VSB-TUO\Testovani_materialu_Markforged\FEA\Flexural_test\shell2');
+addpath('C:\Users\David Krzikalla\OneDrive - VSB-TUO\Testovani_materialu_Markforged\FEA\Flexural_test\solid2');
+addpath('C:\Users\David Krzikalla\OneDrive - VSB-TUO\Testovani_materialu_Markforged\FEA\Flexural_test\solid3');
+
+shell1=xlsread('shell_solid1_results.xlsx','List1','B2:C21'); % read shell 1 results, defl/force
+solid1=xlsread('shell_solid1_results.xlsx','List1','F2:G21'); % read solid 1 results
+shell2=xlsread('shell2_results.xlsx','List1','N2:O21'); % read shell2 results
+solid2=xlsread('solid2_results.xlsx','List1','B2:C21'); % read solid 2 results
+solid3=xlsread('solid3_results.xlsx','List1','N2:O21'); % read solid 3 results
 %% 1) Process the data
 % Locate the beginning of the loading (locate the zero force possitions within first 100 rows)
 
@@ -87,7 +99,7 @@ for i=1:size(R,1)
 
     EF(i,1)=(span^3*m(i,1))/(4*dimensions(i,1)*dimensions(i,2)^3); % get flexural modulus
 end
-
+Q=find(experimental_new(:,2)==P(1,1),1); % find index of the Pmax
 %% 4) Plot/write the results
 SigmaF_ULT % write flexural strength for each specimen from 1
 EF % write flexural modulus for each specimen from 1
@@ -100,10 +112,10 @@ for i=2:size(R,1)
 end	
 xlabel('Flexural Strain [-]','FontSize',12)
 ylabel('Flexural Stress [MPa]','FontSize',12)
-legend({'Specimen 1','Specimen 2','Specimen 3','Specimen 4','Specimen 5',},'Location','southeast')
+legend({'Specimen 1','Specimen 2','Specimen 3','Specimen 4','Specimen 5'},'Location','southeast')
 grid on
-print('SS_E_017','-dpng');
-print('SS_E_017','-dsvg');
+print('SS','-dpng');
+print('SS','-dsvg');
 
 figure % plot force vs mid-span deflection for all specimens
 plot(experimental_new(1:size(experimental_new,1)-10,1),experimental_new(1:1:size(experimental_new,1)-10,2)); 
@@ -113,7 +125,22 @@ for i=2:size(R,1)
 end	
 xlabel('Mid-Span Deflection [mm]')
 ylabel('Force [N]')
-legend({'Specimen 1','Specimen 2','Specimen 3','Specimen 4','Specimen 5',},'Location','southeast')
+legend({'Specimen 1','Specimen 2','Specimen 3','Specimen 4','Specimen 5'},'Location','southeast')
 grid on
-print('FD_TB_029','-dpng');
-print('FD_TB_029','-dsvg');
+print('FD','-dpng');
+print('FD','-dsvg');
+
+figure % plot force vs mid-span deflection for experimental sp. 1 and numerical
+plot(experimental_new(1:Q,1),experimental_new(1:Q,2),'-k'); % plot exprimental curve of the first specimen up to Pmax
+hold on
+plot(shell1(:,1),shell1(:,2),'--^');
+plot(solid1(:,1),solid1(:,2),'--o');
+plot(shell2(:,1),shell2(:,2),'--*');
+plot(solid2(:,1),solid2(:,2),'--s');
+plot(solid3(:,1),solid3(:,2),'--h');
+xlabel('Mid-Span Deflection [mm]')
+ylabel('Force [N]')
+legend({'Experiment','Shell 1','Solid 1','Shell 2','Solid 2','Solid 3'},'Location','southeast')
+grid on
+print('exp_num','-dpng');
+print('exp_num','-dsvg');
