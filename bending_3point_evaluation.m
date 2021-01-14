@@ -19,7 +19,7 @@ close all
 addpath('C:\Users\David Krzikalla\OneDrive - VSB-TUO\Testovani_materialu_Markforged');
 
 % Import force/deflection data from experiments for five specimens 
-experimental=xlsread('E_017_5mm_min.xlsx','Test Curve Data','A3:D5764');
+experimental=xlsread('E_017_5mm_min.xlsx','Test Curve Data','A3:J5764');
 
 % Import dimensions of specimens tested. Width, thickness
 dimensions=xlsread('Ukoly a testovani.xlsx','Ohyb','D40:E44');
@@ -53,6 +53,7 @@ end
 
 % Create a new experimental results matrix with ommited zero force values
 % and shifted back to zero
+experimental_new=zeros(size(experimental,1),size(experimental,2));
 for i=1:size(R,1)
     for j=1:size(experimental,1)-(R(i,1)-1) 
     experimental_new(j,i*2-1)=(experimental(R(i,1)+(j-1),i*2-1))-(experimental(R(i,1),i*2-1)); %defl
@@ -69,9 +70,9 @@ for i=1:size(R,1)
     SigmaF_ULT(i,1)=(3*max(experimental_new(:,i*2))*span)/(2*dimensions(i,1)*dimensions(i,2)^2);
 end
 
-SigF_EpsF=zeros(size(experimental_new,1)-10,2*size(R,1)); % initiate a matrix for flexural stress and strain
+SigF_EpsF=zeros(size(experimental_new,1),2*size(R,1)); % initiate a matrix for flexural stress and strain
 for i=1:size(R,1)
-    for j=1:size(experimental_new,1)-10
+    for j=1:size(experimental_new,1)
         SigF_EpsF(j,i*2-1)=(3*experimental_new(j,i*2)*span)/(2*dimensions(i,1)*dimensions(i,2)^2); % flexural stress
         SigF_EpsF(j,i*2)=(6*dimensions(i,2)*experimental_new(j,i*2-1))/span^2; % flexural strain
     end
@@ -82,15 +83,15 @@ P=zeros(size(R,1),3);
 L=zeros(size(R,1),2);
 m=zeros(size(R,1),1);
 EF=zeros(size(R,1),1);
-TOL_L1=0.1; % tolerance for finding the index in data matrix of the  75 % Pmax value
-TOL_L2=0.2; % tolerance for finding the index in data matrix of the  25 % Pmax value
+TOL_L1=0.1; % tolerance for finding the index in data matrix of the  60 % Pmax value
+TOL_L2=0.2; % tolerance for finding the index in data matrix of the  10 % Pmax value
 for i=1:size(R,1)
     P(i,1)=max(experimental_new(:,i*2)); % get max force
-    P(i,2)=P(i,1)*0.75; % get 75 % of max force
-    P(i,3)=P(i,1)*0.25; % get 25 % of max force
+    P(i,2)=P(i,1)*0.6; % get 60 % of max force
+    P(i,3)=P(i,1)*0.1; % get 10 % of max force
     
-    [L(i,1),~]=find(abs(experimental_new(:,i*2)-P(i,2))<TOL_L1,1); % find index of the 75 % Pmax
-    [L(i,2),~]=find(abs(experimental_new(:,i*2)-P(i,3))<TOL_L2,1); % find index of the 25 % Pmax
+    [L(i,1),~]=find(abs(experimental_new(:,i*2)-P(i,2))<TOL_L1,1); % find index of the 60 % Pmax
+    [L(i,2),~]=find(abs(experimental_new(:,i*2)-P(i,3))<TOL_L2,1); % find index of the 10 % Pmax
     % If there is an issue 'Assignment has more non-singleton rhs dimensions
     % than non-singleton subscripts' then just increase the tolerance
     % TOL_L1 and/or TOL_L2 by 0.1 until working
@@ -100,15 +101,21 @@ for i=1:size(R,1)
     EF(i,1)=(span^3*m(i,1))/(4*dimensions(i,1)*dimensions(i,2)^3); % get flexural modulus
 end
 Q=find(experimental_new(:,2)==P(1,1),1); % find index of the Pmax
+
+T=zeros(1,size(R,1));
+for i=2:2:size(experimental,2)
+    [T(1,i/2),~]= find(experimental_new(2:size(experimental_new,1),i),1,'last'); % find first zero force at the end of the matrix (additional zeros to be exclueded from plotting) 
+end
+
 %% 4) Plot/write the results
 SigmaF_ULT % write flexural strength for each specimen from 1
 EF % write flexural modulus for each specimen from 1
 
 figure % plot flexural stress vs strain for all specimens
-plot(SigF_EpsF(:,2),SigF_EpsF(:,1)); 
+plot(SigF_EpsF(1:T(1,1),2),SigF_EpsF(1:T(1,1),1)); 
 hold on
 for i=2:size(R,1)
-	plot(SigF_EpsF(:,i*2),SigF_EpsF(:,i*2-1)); 
+	plot(SigF_EpsF(1:T(1,i),i*2),SigF_EpsF(1:T(1,i),i*2-1)); 
 end	
 xlabel('Flexural Strain [-]','FontSize',12)
 ylabel('Flexural Stress [MPa]','FontSize',12)
@@ -118,10 +125,10 @@ print('SS','-dpng');
 print('SS','-dsvg');
 
 figure % plot force vs mid-span deflection for all specimens
-plot(experimental_new(1:size(experimental_new,1)-10,1),experimental_new(1:1:size(experimental_new,1)-10,2)); 
+plot(experimental_new(1:T(1,1),1),experimental_new(1:T(1,1),2)); 
 hold on
 for i=2:size(R,1)
-    plot(experimental_new(1:size(experimental_new,1)-10,i*2-1),experimental_new(1:1:size(experimental_new,1)-10,i*2)); 
+    plot(experimental_new(1:T(1,i),i*2-1),experimental_new(1:T(1,i),i*2)); 
 end	
 xlabel('Mid-Span Deflection [mm]')
 ylabel('Force [N]')
